@@ -1,4 +1,4 @@
-# Crown Jewel Java Application Monitor
+# Java Application Monitor
 
 **Agentic Post-Deployment Monitoring and Auto-Remediation System**
 
