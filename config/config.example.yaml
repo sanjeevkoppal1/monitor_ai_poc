@@ -1,0 +1,255 @@
+# Crown Jewel Java Application Monitor - Example Configuration
+# This file provides a comprehensive example of all configuration options
+
+# Global system settings
+global:
+  # Logging configuration
+  log_level: INFO                    # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_file: "/var/log/crown-jewel-monitor.log"
+  log_format: json                   # json, text
+  
+  # Core monitoring settings
+  monitoring_interval: 60            # Default monitoring interval in seconds
+  max_concurrent_agents: 5           # Maximum concurrent agent executions
+  data_retention_hours: 24           # How long to keep metrics and alerts
+  
+  # Performance settings
+  async_timeout: 30                  # Async operation timeout in seconds
+  connection_pool_size: 10           # HTTP connection pool size
+  
+  # Feature flags
+  enable_ml_anomaly_detection: true  # Enable ML-based anomaly detection
+  enable_auto_remediation: false     # Enable automated remediation
+  enable_predictive_alerts: true     # Enable predictive alerting
+
+# Splunk integration configuration
+splunk:
+  # Connection settings
+  host: "${SPLUNK_HOST:splunk.company.com}"
+  port: 8089
+  scheme: "https"                    # http or https
+  verify_ssl: true
+  
+  # Authentication (choose one method)
+  # Method 1: Username/Password
+  username: "${SPLUNK_USERNAME:monitoring_user}"
+  password: "${SPLUNK_PASSWORD:secure_password}"
+  
+  # Method 2: Token-based authentication (recommended)
+  # token: "${SPLUNK_AUTH_TOKEN}"
+  
+  # Search settings
+  indexes: ["main", "java_logs", "application"]
+  default_earliest_time: "-15m"
+  default_latest_time: "now"
+  max_search_results: 1000
+  search_timeout: 300                # Search timeout in seconds
+  
+  # Application-specific settings
+  java_app_name: "crown-jewel-app"
+  log_source_patterns:
+    - "*crown-jewel*"
+    - "*java-app*"
+  sourcetypes:
+    - "java_application"
+    - "catalina"
+    - "gc_logs"
+
+# Java application monitoring configuration
+java_application:
+  # Application identification
+  name: "crown-jewel-app"
+  process_pattern: "java.*crown-jewel"  # Pattern to find Java processes
+  
+  # JMX configuration
+  jmx:
+    host: "${JMX_HOST:localhost}"
+    port: ${JMX_PORT:9999}
+    username: "${JMX_USERNAME}"        # Optional
+    password: "${JMX_PASSWORD}"        # Optional
+    ssl_enabled: false
+    connection_timeout: 10
+  
+  # Health endpoint configuration
+  health_endpoints:
+    - url: "http://localhost:8080/actuator/health"
+      timeout: 10
+      expected_status: 200
+    - url: "http://localhost:8080/health"
+      timeout: 5
+      expected_status: 200
+  
+  # Monitoring thresholds
+  thresholds:
+    memory_percent: 85               # Heap usage alert threshold
+    cpu_percent: 80                  # CPU usage alert threshold
+    gc_pause_ms: 1000               # GC pause time alert threshold
+    response_time_ms: 5000          # Response time alert threshold
+    error_rate_percent: 5           # Error rate alert threshold
+
+# Proactive detection configuration
+proactive_detection:
+  prediction_window_hours: 2
+  baseline_period_days: 7
+  anomaly_threshold: 0.7
+  min_confidence_threshold: 0.6
+  enable_ml_detection: true
+  data_directory: "/var/lib/crown-jewel/proactive-detection"
+
+# Automated remediation configuration
+remediation:
+  auto_approve_low_risk: true
+  auto_approve_medium_risk: false
+  max_concurrent_remediations: 3
+  enable_rollback: true
+  max_remediations_per_hour: 10
+  data_directory: "/var/lib/crown-jewel/remediation"
+  
+  # Java application specific settings
+  java_application:
+    restart_command: "systemctl restart crown-jewel-app"
+    health_check_url: "http://localhost:8080/actuator/health"
+
+# Agent configurations
+agents:
+  # Splunk monitoring agent
+  splunk_monitor:
+    type: "splunk"
+    enabled: true
+    execution_interval: 300         # Run every 5 minutes
+    config:
+      pattern_matching_enabled: true
+      anomaly_detection_enabled: true
+  
+  # Java health monitoring agent
+  java_health_monitor:
+    type: "java_health"
+    enabled: true
+    execution_interval: 60          # Run every minute
+    config:
+      jmx_monitoring_enabled: true
+      health_endpoint_monitoring: true
+      process_monitoring_enabled: true
+  
+  # Proactive detection agent
+  proactive_detection_monitor:
+    type: "proactive_detection"
+    enabled: true
+    execution_interval: 120         # Run every 2 minutes
+    config:
+      prediction_enabled: true
+      trend_analysis_enabled: true
+  
+  # Remediation agent
+  remediation_agent:
+    type: "remediation"
+    enabled: true
+    execution_interval: 180         # Run every 3 minutes
+    config:
+      auto_remediation_enabled: false
+
+# Alerting and notification configuration
+alerting:
+  # Global alerting settings
+  enabled: true
+  default_severity_threshold: "medium"  # minimum severity to process
+  alert_suppression_window: 300         # seconds
+  max_alerts_per_hour: 100
+  
+  # Notification channels
+  channels:
+    # Slack integration
+    slack:
+      type: "slack"
+      enabled: true
+      severity_filter: ["critical", "high", "medium"]
+      config:
+        webhook_url: "${SLACK_WEBHOOK_URL}"
+        channel: "#monitoring-alerts"
+        username: "Crown Jewel Monitor"
+    
+    # Email notifications
+    email:
+      type: "email"
+      enabled: true
+      severity_filter: ["critical", "high"]
+      config:
+        smtp_host: "${SMTP_HOST:smtp.company.com}"
+        smtp_port: ${SMTP_PORT:587}
+        smtp_username: "${SMTP_USERNAME:alerts@company.com}"
+        smtp_password: "${SMTP_PASSWORD}"
+        from_address: "crown-jewel-monitor@company.com"
+        recipients:
+          critical: ["oncall@company.com", "management@company.com"]
+          high: ["dev-team@company.com", "ops-team@company.com"]
+          medium: ["dev-team@company.com"]
+    
+    # PagerDuty integration
+    pagerduty:
+      type: "pagerduty"
+      enabled: false
+      severity_filter: ["critical"]
+      config:
+        integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
+  
+  # Escalation rules
+  escalation_rules:
+    critical_java_errors:
+      trigger_type: "time_based"
+      initial_delay_minutes: 0
+      escalation_interval_minutes: 15
+      max_escalations: 3
+      severity_levels: ["critical"]
+      alert_patterns: ["OutOfMemoryError", "StackOverflowError"]
+      escalation_channels: ["pagerduty", "email", "slack"]
+    
+    performance_degradation:
+      trigger_type: "acknowledgment_timeout"
+      trigger_conditions:
+        timeout_minutes: 30
+      severity_levels: ["high", "critical"]
+      escalation_channels: ["email", "slack"]
+
+# REST API configuration
+api:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8080
+  debug: false
+  
+  # CORS configuration
+  cors:
+    origins: ["*"]
+  
+  # Authentication
+  authentication:
+    enabled: false
+    tokens:
+      - token: "${API_TOKEN_ADMIN}"
+        user: "admin"
+        permissions: ["read", "write", "admin"]
+        expires: "2024-12-31"
+      - token: "${API_TOKEN_READONLY}"
+        user: "readonly"
+        permissions: ["read"]
+        expires: "2024-12-31"
+
+# Security configuration
+security:
+  # Data protection
+  data_protection:
+    pii_filtering:
+      enabled: true
+      patterns:
+        - "\\b\\d{3}-\\d{2}-\\d{4}\\b"      # SSN
+        - "\\b\\d{16}\\b"                    # Credit card
+    
+    encryption:
+      enabled: false
+      algorithm: "AES-256-GCM"
+  
+  # Audit logging
+  audit:
+    enabled: true
+    log_file: "/var/log/crown-jewel-monitor-audit.log"
+    events: ["authentication", "configuration_changes", "remediation_actions"]

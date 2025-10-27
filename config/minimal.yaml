@@ -1,0 +1,56 @@
+# Minimal configuration for testing Crown Jewel Monitor
+
+# Global system settings
+global:
+  log_level: INFO
+  monitoring_interval: 60
+  max_concurrent_agents: 2
+  data_retention_hours: 24
+  enable_ml_anomaly_detection: false  # Disable ML for initial testing
+  enable_auto_remediation: false
+  enable_predictive_alerts: false
+
+# Minimal alerting configuration
+alerting:
+  enabled: true
+  default_severity_threshold: "medium"
+  max_alerts_per_hour: 100
+  
+  # Basic console/log notifications only
+  channels:
+    console:
+      type: "webhook"
+      enabled: true
+      config:
+        url: "http://localhost:9999/test-webhook"  # Non-existent endpoint for testing
+
+# REST API configuration
+api:
+  enabled: true
+  host: "127.0.0.1"
+  port: 8080
+  debug: true
+  
+  # No authentication for testing
+  authentication:
+    enabled: false
+
+# Basic agent configurations (minimal for testing)
+agents:
+  # Basic health monitoring agent (without JMX initially)
+  basic_health_monitor:
+    type: "java_health"
+    enabled: true
+    execution_interval: 120
+    config:
+      jmx_monitoring_enabled: false  # Disable JMX for initial testing
+      health_endpoint_monitoring: false
+      process_monitoring_enabled: false
+
+# Minimal Java application settings
+java_application:
+  name: "test-java-app"
+  process_pattern: "java"
+  thresholds:
+    memory_percent: 85
+    cpu_percent: 80
