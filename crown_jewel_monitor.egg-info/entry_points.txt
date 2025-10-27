@@ -1,0 +1,2 @@
+[console_scripts]
+crown-jewel-monitor = crown_jewel_monitor.main:cli_main
